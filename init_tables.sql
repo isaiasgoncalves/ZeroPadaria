@@ -1,0 +1,26 @@
+CREATE SCHEMA zeroPadaria;
+
+SET SEARCH_PATH = zeroPadaria;
+
+CREATE TABLE Users
+(
+  userID VARCHAR NOT NULL,
+  userName VARCHAR(64) NOT NULL,
+  userEmail VARCHAR(128) NOT NULL,
+  userRole VARCHAR(64) NOT NULL,
+  PRIMARY KEY (userID)
+);
+
+CREATE TABLE Registro
+(
+  date DATE NOT NULL,
+  userID VARCHAR NOT NULL,
+  cafe VARCHAR(64) NOT NULL,
+  almoco VARCHAR(64) NOT NULL,
+  janta VARCHAR(64) NOT NULL,
+  lanche VARCHAR(64) NOT NULL,
+  marmita VARCHAR(64) NOT NULL,
+  PRIMARY KEY (date, userID),
+  FOREIGN KEY (userID) REFERENCES Users(userID)
+);
+
