@@ -15,7 +15,8 @@ def main():
    opcao = st.sidebar.selectbox("Escolha uma opção:", ["Registrar Comensais", 
                                                        "Visualizar Dados", 
                                                        "Relatórios",
-                                                       "Detectar Padarias"])
+                                                       "Detectar Padarias",
+                                                       "Ver Usuários"])
 
    if opcao == "Registrar Comensais":
       register_diners()
@@ -25,7 +26,16 @@ def main():
       show_reports()
    elif opcao == "Detectar Padarias":
       who_will_eat()
+   elif opcao == "Ver Usuários":
+      show_users()
 
+def show_users():
+   df_users = seek_users()
+   if not df_users.empty:
+      st.dataframe(df_users, use_container_width=True)
+
+   else:
+      st.info("Nenhum Usuário Cadastrado")
 
 def register_diners():
    st.header("Registrar os comensais")
@@ -36,7 +46,7 @@ def register_diners():
    with col1:
       # Buscar usuários no banco
       users_df = seek_users()
-      user_options = {f"{row['username']} ({row['useremail']})":row['userid'] for _, row in users_df.iterrows()}
+      user_options = {f"{row['username']}":row['userid'] for _, row in users_df.iterrows()}
 
       selected_user = st.selectbox("Selecione o usuário: ", list(user_options.keys()))
 
@@ -57,45 +67,35 @@ def register_diners():
       except Exception as e:
          st.error(f"Erro ao salvar: {e}")
 
-def show_table(query):
-
-   df = pd.read_sql(query, engine)
-
-   if not df.empty:
-      st.dataframe(df, use_container_width=True)
-
-   else:
-      st.info("Nenhuma informação a ser exibida")
-
 def show_reports():
    st.header("Visualizar Comensais")
    date_diners = st.date_input("Data: ", value=date.today())
 
    query = """
    SET SEARCH_PATH = zeropadaria;
-   SELECT date,
-          COUNT(CASE WHEN almoco   = 'Cedo' THEN 1 END) AS almoco_cedo,
-          COUNT(CASE WHEN almoco   = 'Sim' THEN 1 END) AS almoco_normal,
-          COUNT(CASE WHEN almoco   = 'Tarde' THEN 1 END) AS almoco_tarde,
-          COUNT(CASE WHEN janta    = 'Sim' THEN 1 END) AS janta_normal,
-          COUNT(CASE WHEN janta    = 'Tarde' THEN 1 END) AS janta_tarde,
-          COUNT(CASE WHEN cafe     = 'Cedo' THEN 1 END) AS cafe_cedo,
-          COUNT(CASE WHEN cafe     = 'Sim' THEN 1 END) AS cafe_normal,
-          COUNT(CASE WHEN lanche   = 'Sim' THEN 1 END) AS lanche,
-          COUNT(CASE WHEN marmita  = 'Sim' THEN 1 END) AS marmita
+   SELECT
+         COUNT(CASE WHEN almoco   = 'Cedo' THEN 1 END)  AS "Almoço Cedo",
+         COUNT(CASE WHEN almoco   = 'Sim' THEN 1 END)   AS "Almoço",
+         COUNT(CASE WHEN almoco   = 'Tarde' THEN 1 END) AS "Almoço Tarde",
+         COUNT(CASE WHEN janta    = 'Sim' THEN 1 END)   AS "Jantar",
+         COUNT(CASE WHEN janta    = 'Tarde' THEN 1 END) AS "Jantar Tarde",
+         COUNT(CASE WHEN cafe     = 'Cedo' THEN 1 END)  AS "Café da Manhã Cedo",
+         COUNT(CASE WHEN cafe     = 'Sim' THEN 1 END)   AS "Café da Manhã",
+         COUNT(CASE WHEN lanche   = 'Sim' THEN 1 END)   AS "Lanche",
+         COUNT(CASE WHEN marmita  = 'Sim' THEN 1 END)   AS "Marmita"
    FROM registro
    WHERE date = '{date}'
    GROUP BY date
    ORDER BY date;
    """
    df = pd.read_sql(query.format(date=date_diners), engine)
+   df = df.transpose()
 
    if not df.empty:
-      st.dataframe(df, use_container_width=True)
+      st.dataframe(df,)
 
    else:
       st.info("Nenhuma refeição registrada.")
-
 
 def visualize_data():
 
@@ -125,16 +125,9 @@ def visualize_data():
 
    pass
 
-def show_table(query):
-    df = pd.read_sql(query, engine)
-    if not df.empty:
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info("Nenhuma informação a ser exibida")
-
 def who_will_eat():
 
-   date_diners = st.date_input("Data: ", value=date)
+   date_diners = st.date_input("Data: ", value=date.today())
    meal = st.selectbox("Escolha uma refeição:", ["Café da Manhã", "Almoço", "Jantar", "Lanche", "Marmita"])
     
    # Configurações por refeição
@@ -187,6 +180,16 @@ def who_will_eat():
       st.header(f"{header}:")
       query = base_query.format(column=config["column"], value=value, date=seek_date)
       show_table(query)
+
+def show_table(query):
+
+   df = pd.read_sql(query, engine)
+
+   if not df.empty:
+      st.dataframe(df, use_container_width=True)
+
+   else:
+      st.info("Nenhuma informação a ser exibida")
 
 if __name__ == "__main__":
    main()
