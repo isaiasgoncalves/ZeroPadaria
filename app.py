@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date, datetime
 from database import test_connection, seek_users, insert_diners, engine
 from datetime import timedelta
+from sqlalchemy.exc import IntegrityError
 
 
 st.set_page_config(page_title="ZeroPadaria, o novo sistema de comensais do CCUB", layout="wide")
@@ -61,9 +62,16 @@ def register_diners():
 
    if st.button('Salvar Comensais'):
       try:
+         if selected_user is None:
+            st.error("Nenhum usuário selecionado.")
+            return
          userID = user_options[selected_user]
          insert_diners(userID, date_diners, almoco, janta, cafe, lanche, marmita)
          st.success("Comensais registrados com sucesso!")
+
+      except IntegrityError:
+         st.error(f"Você já enviou os comensais desse dia!")
+
       except Exception as e:
          st.error(f"Erro ao salvar: {e}")
 
