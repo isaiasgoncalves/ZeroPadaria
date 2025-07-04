@@ -1,0 +1,6 @@
+psycopg2-binary     # driver PostgreSQL
+SQLAlchemy>=2.0     # ORM (mais fácil para POO)
+pydantic            # validações opcionais
+streamlit           # interface gráfica
+pandas              # relatórios/exportação
+apscheduler         # tarefa diária de bloqueio às 10 h
